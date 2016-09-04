@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:int="http://www.springframework.org/schema/integration"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/integration
+        http://www.springframework.org/schema/integration/spring-integration.xsd">
+
+    <int:channel id="input"/>
+
+    <int:transformer input-channel="input" output-channel="output">
+        <bean class="cxp.ingest.MetadataRetriever">
+            <constructor-arg value="${metastoreApiUrl}"/>
+            <constructor-arg value="${metadataCacheLife}"/>
+            <property name="metadataProvider" value="metadataProvider"/>
+        </bean>
+    </int:transformer>
+
+    <int:channel id="output"/>
+
+    <bean id="metadataProvider" class="cxp.ingest.MetadataProviderImpl">
+        <property name="datasetUrl" value="${dataset-lookup-url}"/>
+        <property name="idResolutionUrl" value="${customer-id-resolution-url}"/>
+        <property name="jobUrl" value="${jobs-url}"/>
+        <property name="testJobUrl" value="${test-jobs-url}"/>
+        <property name="dateFormatsUrl" value="${date-formats-url}"/>
+        <property name="jdbcTemplate" ref="jdbcTemplate"/>
+    </bean>
+
+    <bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <bean id="dataSource" class="org.apache.tomcat.jdbc.pool.DataSource" destroy-method="close">
+        <property name="driverClassName" value="${cxp.datasource.driver-class-name}"/>
+        <property name="url" value="${cxp.datasource.url}"/>
+        <property name="username" value="${cxp.datasource.username}"/>
+        <property name="password" value="${cxp.datasource.password}"/>
+    </bean>
+
+</beans>
